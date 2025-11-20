@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GETTYSBURG 1863</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+    :root {
+      --bg: #1a1612;
+      --panel: #2a241f;
+      --text: #e8dcc8;
+      --accent: #c49a6a;
+      --good: #6b8e5a;
+      --bad: #8b5a4a;
+      --neutral: #9a8a6a;
+      --union-blue: #4a6a9a;
+      --confed-red: #9a5a4a;
+      --map-green: #3a4a2a;
+      --map-brown: #5a4a3a;
+      --gold: #d4a574;
+    }
+    body {
+      margin: 0; 
+      font-family: 'Crimson Text', Georgia, serif;
+      background: #0f0d0a url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%231a1612"/><path d="M0 0L100 100M100 0L0 100" stroke="%231f1b16" stroke-width="0.5"/></svg>');
+      color: var(--text);
+      image-rendering: pixelated;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 12px; }
+    header { 
+      margin-bottom: 16px; 
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 12px;
+      text-align: center;
+    }
+    h1 { 
+      margin: 0 0 4px; 
+      font-family: 'Cinzel', serif;
+      font-size: 32px; 
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    .subtitle { 
+      color: #9a8a7a; 
+      font-size: 17px; 
+      font-style: italic;
+      font-weight: 400;
+    }
+    .panel {
+      background: linear-gradient(180deg, rgba(42,36,31,0.95), rgba(26,22,18,0.98));
+      border: 2px solid rgba(196,154,106,0.4);
+      border-top: 3px solid rgba(196,154,106,0.6);
+      border-radius: 4px; 
+      padding: 14px; 
+      box-shadow: 
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        0 4px 12px rgba(0,0,0,0.6),
+        0 0 0 1px rgba(0,0,0,0.3);
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(196,154,106,0.3), transparent);
+    }
+    .row { display: grid; grid-template-columns: 1fr 320px; gap: 14px; }
+    .mapbox {
+      aspect-ratio: 16 / 9; 
+      border-radius: 2px; 
+      overflow: hidden; 
+      border: 3px solid rgba(196,154,106,0.5);
+      background: #1a1610; 
+      position: relative;
+      box-shadow: 
+        inset 0 0 60px rgba(0,0,0,0.8),
+        0 0 0 1px rgba(0,0,0,0.5);
+    }
+    .map {
+      width: 100%; height: 100%;
+      background: 
+        radial-gradient(ellipse at 30% 60%, rgba(58,74,42,0.4), transparent 60%),
+        linear-gradient(180deg, rgba(90,74,58,0.3) 0%, transparent 50%),
+        #1a1610;
+      position: relative;
+      image-rendering: crisp-edges;
+    }
+    .map svg {
+      width: 100%; height: 100%;
+      position: absolute;
+      top: 0; left: 0;
+    }
+    .terrain-path {
+      fill: none;
+      stroke: #8a7a6a;
+      stroke-width: 6;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+      opacity: 0.7;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+    }
+    .hill-circle {
+      fill: #6a5a4a;
+      stroke: #9a8a7a;
+      stroke-width: 2;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.9));
+    }
+    .label {
+      position: absolute; 
+      font-size: 10px; 
+      font-weight: 600;
+      font-family: 'Cinzel', serif;
+      color: #e8dcc8; 
+      background: rgba(26,22,18,0.95); 
+      padding: 4px 8px; 
+      border-radius: 2px;
+      border: 1px solid rgba(196,154,106,0.5); 
+      z-index: 10;
+      box-shadow: 
+        0 2px 4px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .label.lrt { left: 24%; top: 48%; }
+    .label.cemetery { left: 15%; top: 28%; }
+    .label.seminary { left: 72%; top: 38%; }
+    .flag {
+      position: absolute; 
+      width: 20px; 
+      height: 20px; 
+      border-radius: 2px;
+      box-shadow: 
+        0 2px 6px rgba(0,0,0,0.9),
+        0 0 8px rgba(196,154,106,0.4); 
+      border: 2px solid rgba(232,220,200,0.9); 
+      z-index: 10;
+      animation: pulse 2s ease-in-out infinite;
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .flag.active {
+      animation: flagAction 1s ease-out;
+    }
+    @keyframes flagAction {
+      0% { transform: scale(1) translateY(0); }
+      25% { transform: scale(1.2) translateY(-5px); }
+      50% { transform: scale(1.1) translateY(-3px); }
+      100% { transform: scale(1) translateY(0); }
+    }
+    .battle-effect {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 12;
+      opacity: 0;
+    }
+    .battle-effect.explosion {
+      background: radial-gradient(circle, rgba(255,200,100,0.8), rgba(255,100,50,0.6), transparent);
+      animation: explode 1s ease-out forwards;
+    }
+    @keyframes explode {
+      0% { 
+        transform: scale(0);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.5);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(2.5);
+        opacity: 0;
+      }
+    }
+    .battle-effect.smoke {
+      background: radial-gradient(circle, rgba(100,100,100,0.6), rgba(50,50,50,0.4), transparent);
+      animation: smoke 2s ease-out forwards;
+    }
+    @keyframes smoke {
+      0% { 
+        transform: scale(0) translateY(0);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(2) translateY(-30px);
+        opacity: 0;
+      }
+    }
+    .battle-line {
+      position: absolute;
+      height: 2px;
+      background: rgba(196,154,106,0.6);
+      z-index: 8;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .battle-line.active {
+      opacity: 1;
+      animation: linePulse 1s ease-in-out;
+    }
+    @keyframes linePulse {
+      0%, 100% { 
+        box-shadow: 0 0 4px rgba(196,154,106,0.4);
+        transform: scaleY(1);
+      }
+      50% { 
+        box-shadow: 0 0 12px rgba(196,154,106,0.8);
+        transform: scaleY(1.5);
+      }
+    }
+    .score-change {
+      position: absolute;
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 24px;
+      pointer-events: none;
+      z-index: 20;
+      text-shadow: 0 0 8px rgba(212,165,116,0.8);
+      animation: scoreFloat 1.5s ease-out forwards;
+    }
+    @keyframes scoreFloat {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(1.2);
+      }
+    }
+    .map.animating {
+      animation: mapShake 0.5s ease-out;
+    }
+    @keyframes mapShake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+      20%, 40%, 60%, 80% { transform: translateX(2px); }
+    }
+    .flag.union { 
+      background: linear-gradient(135deg, #3a5a8a, #5a7aaa); 
+      border-color: rgba(90,122,170,0.8);
+    }
+    .flag.confed { 
+      background: linear-gradient(135deg, #8a4a3a, #aa5a4a); 
+      border-color: rgba(170,90,74,0.8);
+    }
+    #union-line, #confed-line {
+      filter: drop-shadow(0 0 4px currentColor);
+      transition: all 1s ease-out;
+    }
+    #union-line {
+      filter: drop-shadow(0 0 6px rgba(74,106,154,0.8));
+    }
+    #confed-line {
+      filter: drop-shadow(0 0 6px rgba(154,90,74,0.8));
+    }
+    .flag.union.meade { 
+      left: 20%; 
+      top: 30%; 
+      transition: left 1s ease-out, top 1s ease-out;
+    }
+    .flag.confed.lee { 
+      left: 75%; 
+      top: 46%; 
+      transition: left 1s ease-out, top 1s ease-out;
+    }
+    .timeline { 
+      display: flex; 
+      gap: 6px; 
+      margin-bottom: 12px; 
+      flex-wrap: wrap;
+    }
+    .pill {
+      padding: 6px 12px; 
+      border-radius: 2px; 
+      border: 1px solid rgba(196,154,106,0.3);
+      background: rgba(26,22,18,0.8); 
+      color: #9a8a7a; 
+      cursor: pointer; 
+      user-select: none;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .pill:hover { 
+      background: rgba(196,154,106,0.2); 
+      border-color: rgba(196,154,106,0.6);
+      color: var(--text);
+    }
+    .pill.active { 
+      background: linear-gradient(180deg, rgba(196,154,106,0.4), rgba(196,154,106,0.2)); 
+      border-color: var(--accent); 
+      color: var(--gold);
+      box-shadow: 
+        0 0 8px rgba(196,154,106,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .choices { display: grid; gap: 8px; }
+    button.choice {
+      padding: 10px 12px; 
+      border-radius: 2px; 
+      border: 1px solid rgba(196,154,106,0.3);
+      background: rgba(26,22,18,0.9); 
+      color: var(--text); 
+      text-align: left; 
+      cursor: pointer;
+      font-family: 'Crimson Text', serif;
+      font-size: 13px;
+      transition: all 0.15s;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      position: relative;
+    }
+    button.choice::before {
+      content: '▶';
+      position: absolute;
+      left: 8px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    button.choice:hover { 
+      background: rgba(196,154,106,0.15); 
+      border-color: var(--accent); 
+      transform: translateX(4px);
+      padding-left: 20px;
+    }
+    button.choice:hover::before {
+      opacity: 0.6;
+    }
+    button.choice:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    button.choice:disabled:hover {
+      background: rgba(26,22,18,0.9);
+      border-color: rgba(196,154,106,0.3);
+      padding-left: 12px;
+    }
+    button.choice:disabled:hover::before {
+      opacity: 0;
+    }
+    button.next {
+      margin-top: 12px;
+      padding: 10px 20px;
+      border-radius: 2px;
+      border: 2px solid var(--accent);
+      background: linear-gradient(180deg, rgba(196,154,106,0.3), rgba(196,154,106,0.15));
+      color: var(--gold);
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(196,154,106,0.3);
+      width: 100%;
+    }
+    button.next:hover {
+      background: linear-gradient(180deg, rgba(196,154,106,0.4), rgba(196,154,106,0.25));
+      box-shadow: 0 4px 12px rgba(196,154,106,0.4);
+      transform: translateY(-1px);
+    }
+    .outcome { 
+      font-size: 13px; 
+      color: var(--text); 
+      font-style: italic;
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,0.3);
+      border-left: 3px solid var(--accent);
+      display: none;
+    }
+    .outcome:not(:empty) {
+      display: block;
+    }
+    .score { 
+      font-weight: 700; 
+      font-family: 'Cinzel', serif;
+      color: var(--gold); 
+      font-size: 18px;
+      text-shadow: 0 0 8px rgba(212,165,116,0.5);
+    }
+    .ribbon {
+      position: fixed; 
+      right: 12px; 
+      bottom: 12px; 
+      font-size: 11px; 
+      color: #9a8a7a;
+      background: rgba(26,22,18,0.95); 
+      border: 1px solid rgba(196,154,106,0.4); 
+      padding: 6px 10px; 
+      border-radius: 2px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+      font-style: italic;
+    }
+    .quote {
+      background: rgba(0,0,0,0.4);
+      border-left: 4px solid var(--gold);
+      border-radius: 2px; 
+      padding: 10px; 
+      font-size: 12px; 
+      color: #d4c5a9;
+      font-style: italic;
+      margin-top: 8px;
+      font-family: 'Crimson Text', serif;
+      display: none;
+    }
+    .quote:not(:empty) {
+      display: block;
+    }
+    .legend { 
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      font-size: 10px; 
+      color: #9a8a7a; 
+      background: rgba(0,0,0,0.7); 
+      padding: 4px 8px; 
+      border-radius: 2px; 
+      border: 1px solid rgba(196,154,106,0.4);
+      font-style: italic;
+      z-index: 15;
+    }
+    .footer {
+      font-size: 11px; 
+      color: #9a8a7a; 
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(196,154,106,0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    select {
+      background: rgba(26,22,18,0.9);
+      border: 1px solid rgba(196,154,106,0.3);
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 2px;
+      font-family: 'Crimson Text', serif;
+      font-size: 11px;
+    }
+    .hud {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      display: flex;
+      gap: 8px;
+      z-index: 15;
+    }
+    .hud-stat {
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(196,154,106,0.4);
+      padding: 4px 8px;
+      border-radius: 2px;
+      font-size: 10px;
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+    }
+    .hud-stat .label {
+      font-size: 8px;
+      color: #9a8a7a;
+      text-transform: uppercase;
+      position: static;
+      background: none;
+      border: none;
+      padding: 0;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>BATTLE OF GETTYSBURG SIMULATION</h1>
+      <div class="subtitle">Isabella Li</div>
+    </header>
+
+    <div class="panel row">
+      <div class="mapbox">
+        <div class="map" id="map">
+          <div class="hud">
+            <div class="hud-stat">
+              <div class="label">Day</div>
+              <div id="hud-day">1</div>
+            </div>
+            <div class="hud-stat">
+              <div class="label">Morale</div>
+              <div id="hud-morale">50</div>
+            </div>
+          </div>
+          
+          <svg viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid meet">
+            <path class="terrain-path" d="M 150 180 L 200 175 L 250 180 L 300 185 L 350 180 L 400 175 L 450 180" />
+            <path class="terrain-path" d="M 550 235 L 600 230 L 650 235 L 700 240 L 750 235 L 800 230 L 900 235" />
+            <circle class="hill-circle" cx="220" cy="290" r="14" />
+            <circle class="hill-circle" cx="280" cy="310" r="11" />
+            <path class="terrain-path" d="M 120 200 L 180 195 L 240 200" stroke-width="4" opacity="0.5" />
+            <path class="terrain-path" d="M 520 250 L 580 245 L 640 250" stroke-width="4" opacity="0.5" />
+            <path class="terrain-path" d="M 100 400 L 300 350 L 500 300 L 700 250 L 900 200" stroke-width="3" stroke-dasharray="8,4" opacity="0.5" />
+            
+            <line id="union-line" x1="200" y1="100" x2="200" y2="500" stroke="#4a6a9a" stroke-width="4" opacity="0.6" stroke-dasharray="6,4" />
+            <line id="confed-line" x1="750" y1="100" x2="750" y2="500" stroke="#9a5a4a" stroke-width="4" opacity="0.6" stroke-dasharray="6,4" />
+          </svg>
+          
+          <div class="label cemetery">Cemetery Ridge</div>
+          <div class="label seminary">Seminary Ridge</div>
+          <div class="label lrt">Little Round Top</div>
+
+          <div class="flag union meade" title="Meade HQ"></div>
+          <div class="flag confed lee" title="Lee HQ"></div>
+          
+          <div class="battle-line" style="left: 20%; top: 30%; width: 2px; height: 40%;"></div>
+          <div class="battle-line" style="left: 75%; top: 46%; width: 2px; height: 30%;"></div>
+
+          <div class="legend">  Map | Blue: Union | Red: Confederate</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="timeline" id="timeline"></div>
+        <div class="choices" id="choices"></div>
+        <div class="outcome" id="outcome"></div>
+        <div class="quote" id="quote"></div>
+        <div class="footer">
+          <div><span style="color: #9a8a7a;">STRATEGIC SCORE:</span> <span class="score" id="score">0</span></div>
+          <div>
+            <span style="color: #9a8a7a;">COMMANDER:</span>
+            <select id="role">
+              <option value="meade">Meade (Union)</option>
+              <option value="lee">Lee (Confederate)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div style="font-size: 13px; color: #9a8a7a; font-style: italic; line-height: 1.6;">
+        <strong style="color: var(--gold); font-style: normal;">Historical Note:</strong> Each decision reflects actual tactical choices faced during the three days of battle. Consider terrain, supply lines, and morale. Lincoln's Address reframed these sacrifices as foundational to American democracy.
+      </div>
+    </div>
+  </div>
+
+  <div class="ribbon">Press decisions to advance the battle</div>
+
+  <audio id="audio-positive" preload="auto">
+    <source src="positive.wav" type="audio/wav">
+  </audio>
+  <audio id="audio-negative" preload="auto">
+    <source src="negative.wav" type="audio/wav">
+  </audio>
+  <audio id="audio-win" preload="auto">
+    <source src="win.wav" type="audio/wav">
+  </audio>
+  <audio id="audio-lose" preload="auto">
+    <source src="lose.wav" type="audio/wav">
+  </audio>
+
+  <script>
+    const days = [
+      {
+        id: 1, title: "Day 1 — July 1: Initial Contact at Gettysburg",
+        prompt: "Do you stand and defend high ground or press aggressively into town?",
+        options: [
+          {
+            id: "hold_high_ground",
+            text: "Hold/secure Cemetery Hill and ridges (defense-first)",
+            impact: +21,
+            explain: "Securing the high ground let Union forces anchor a strong defensive line.",
+            lincoln: "Elevates sacrifice as meaningful—defense to preserve the Union aligns with 'last full measure of devotion.'"
+          },
+          {
+            id: "press_town",
+            text: "Press into Gettysburg town (aggressive pursuit)",
+            impact: -21,
+            explain: "Aggressive pursuit risked overextension; terrain favored defenders on the ridges.",
+            lincoln: "Highlights limits of valor without strategy; courage must serve the Union's survival."
+          }
+        ]
+      },
+      {
+        id: 2, title: "Day 2 — July 2: Little Round Top & Flanks",
+        prompt: "Do you commit to holding Little Round Top or shift forces for a broad assault?",
+        options: [
+          {
+            id: "hold_lrt",
+            text: "Hold Little Round Top firmly (e.g., Chamberlain's stand)",
+            impact: +23,
+            explain: "Holding LRT prevented Confederate envelopment; terrain was decisive.",
+            lincoln: "Defensive discipline supports 'government of the people' by denying defeat."
+          },
+          {
+            id: "broad_assault",
+            text: "Launch broad assault across the line",
+            impact: -23,
+            explain: "Broad assaults met prepared positions; casualties rose with limited gains.",
+            lincoln: "Costly attacks risk 'dying in vain' unless tied to preserving the Union."
+          }
+        ]
+      },
+      {
+        id: 3, title: "Day 3 — July 3: Pickett’s Charge",
+        prompt: "Do you order a mass frontal assault or conserve forces and maneuver?",
+        options: [
+          {
+            id: "frontal_assault",
+            text: "Order mass frontal assault (Pickett's Charge)",
+            impact: -23,
+            explain: "Assault over open ground into fortified center led to devastating losses.",
+            lincoln: "A sober reminder that bravery alone cannot secure 'a new birth of freedom.'"
+          },
+          {
+            id: "maneuver_conserve",
+            text: "Conserve forces, maneuver to threaten flanks/retreat",
+            impact: +23,
+            explain: "Avoided catastrophic losses; preserved operational capability.",
+            lincoln: "Prudence preserves the army that must 'long endure' to secure the Union."
+          }
+        ]
+      }
+    ];
+
+    const scoreEl = document.getElementById('score');
+    const choicesEl = document.getElementById('choices');
+    const outcomeEl = document.getElementById('outcome');
+    const quoteEl = document.getElementById('quote');
+    const timelineEl = document.getElementById('timeline');
+    const roleEl = document.getElementById('role');
+    const hudDayEl = document.getElementById('hud-day');
+    const hudMoraleEl = document.getElementById('hud-morale');
+
+    let score = 0;
+    let morale = 50;
+    let dayIndex = 0;
+
+    function renderTimeline() {
+      timelineEl.innerHTML = '';
+      days.forEach((d, i) => {
+        const pill = document.createElement('div');
+        pill.className = 'pill' + (i === dayIndex ? ' active' : '');
+        pill.textContent = d.title;
+        pill.onclick = () => { dayIndex = i; renderDay(); };
+        timelineEl.appendChild(pill);
+      });
+    }
+
+    function renderDay() {
+      renderTimeline();
+      const day = days[dayIndex];
+      choicesEl.innerHTML = '';
+      outcomeEl.textContent = '';
+      quoteEl.textContent = '';
+      
+      hudDayEl.textContent = day.id;
+      hudMoraleEl.textContent = morale;
+
+      const prompt = document.createElement('div');
+      prompt.style.marginBottom = '15px';
+      prompt.style.fontWeight = '600';
+      prompt.style.fontSize = '18px';
+      prompt.style.color = 'var(--gold)';
+      prompt.style.fontFamily = "'Cinzel', serif";
+      prompt.textContent = day.prompt;
+      choicesEl.appendChild(prompt);
+
+      day.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.textContent = opt.text;
+        btn.onclick = () => pickOption(opt);
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function animateChoice(opt) {
+      const mapEl = document.getElementById('map');
+      const mapRect = mapEl.getBoundingClientRect();
+      
+      mapEl.classList.add('animating');
+      setTimeout(() => mapEl.classList.remove('animating'), 500);
+      
+      const unionFlag = mapEl.querySelector('.flag.union.meade');
+      const confedFlag = mapEl.querySelector('.flag.confed.lee');
+      const unionLine = mapEl.querySelector('#union-line');
+      const confedLine = mapEl.querySelector('#confed-line');
+      
+      const moveDistance = Math.min(Math.abs(opt.impact) * 2, 15);
+      const isPositive = opt.impact > 0;
+      
+      if (unionFlag && confedFlag) {
+        const unionLeft = parseFloat(unionFlag.style.left) || 20;
+        const unionTop = parseFloat(unionFlag.style.top) || 30;
+        const confedLeft = parseFloat(confedFlag.style.left) || 75;
+        const confedTop = parseFloat(confedFlag.style.top) || 46;
+        
+        const currentUnionLineX = unionLine ? parseFloat(unionLine.getAttribute('x1')) || 200 : 200;
+        const currentConfedLineX = confedLine ? parseFloat(confedLine.getAttribute('x1')) || 750 : 750;
+        const currentUnionLinePercent = (currentUnionLineX / 1000) * 100;
+        const currentConfedLinePercent = (currentConfedLineX / 1000) * 100;
+        
+        let newUnionLeft, newConfedLeft, newUnionLinePercent, newConfedLinePercent;
+        
+        if (isPositive) {
+          newUnionLeft = Math.min(unionLeft + moveDistance, 90);
+          newConfedLeft = Math.min(confedLeft + moveDistance, 95);
+          newUnionLinePercent = Math.min(currentUnionLinePercent + moveDistance, 90);
+          newConfedLinePercent = Math.min(currentConfedLinePercent + moveDistance, 90);
+        } else {
+          newUnionLeft = Math.max(unionLeft - moveDistance, 5);
+          newConfedLeft = Math.max(confedLeft - moveDistance, 10);
+          newUnionLinePercent = Math.max(currentUnionLinePercent - moveDistance, 5);
+          newConfedLinePercent = Math.max(currentConfedLinePercent - moveDistance, 10);
+        }
+        
+        if (newUnionLinePercent >= newConfedLinePercent) {
+          const midpoint = (newUnionLinePercent + newConfedLinePercent) / 2;
+          newUnionLinePercent = Math.max(midpoint - 1, 5);
+          newConfedLinePercent = Math.min(midpoint + 1, 95);
+        }
+        
+        if (newUnionLeft >= newUnionLinePercent) {
+          newUnionLeft = Math.max(newUnionLinePercent - 3, 5);
+        }
+        
+        if (newConfedLeft <= newConfedLinePercent) {
+          newConfedLeft = Math.min(newConfedLinePercent + 3, 95);
+        }
+        
+        unionFlag.style.left = `${newUnionLeft}%`;
+        if (isPositive) {
+          unionFlag.style.top = `${Math.max(unionTop - moveDistance * 0.5, 15)}%`;
+        } else {
+          unionFlag.style.top = `${Math.min(unionTop + moveDistance * 0.5, 50)}%`;
+        }
+        
+        confedFlag.style.left = `${newConfedLeft}%`;
+        if (isPositive) {
+          confedFlag.style.top = `${Math.min(confedTop + moveDistance * 0.5, 80)}%`;
+        } else {
+          confedFlag.style.top = `${Math.max(confedTop - moveDistance * 0.5, 20)}%`;
+        }
+        
+        if (unionLine) {
+          const unionLineX = (newUnionLinePercent / 100) * 1000;
+          unionLine.setAttribute('x1', unionLineX);
+          unionLine.setAttribute('x2', unionLineX);
+          unionLine.style.transition = 'all 1s ease-out';
+        }
+        if (confedLine) {
+          const confedLineX = (newConfedLinePercent / 100) * 1000;
+          confedLine.setAttribute('x1', confedLineX);
+          confedLine.setAttribute('x2', confedLineX);
+          confedLine.style.transition = 'all 1s ease-out';
+        }
+        
+        unionFlag.classList.add('active');
+        confedFlag.classList.add('active');
+        setTimeout(() => {
+          unionFlag.classList.remove('active');
+          confedFlag.classList.remove('active');
+        }, 1000);
+      }
+      
+      const effectCount = Math.min(Math.abs(opt.impact), 5);
+      
+      for (let i = 0; i < effectCount; i++) {
+        setTimeout(() => {
+          const x = Math.random() * 80 + 10;
+          const y = Math.random() * 60 + 20;
+          
+          if (!isPositive) {
+            const explosion = document.createElement('div');
+            explosion.className = 'battle-effect explosion';
+            explosion.style.left = `${x}%`;
+            explosion.style.top = `${y}%`;
+            mapEl.appendChild(explosion);
+            setTimeout(() => explosion.remove(), 1000);
+          }
+          
+          const smoke = document.createElement('div');
+          smoke.className = 'battle-effect smoke';
+          smoke.style.left = `${x}%`;
+          smoke.style.top = `${y}%`;
+          mapEl.appendChild(smoke);
+          setTimeout(() => smoke.remove(), 2000);
+        }, i * 150);
+      }
+      
+      const battleLines = mapEl.querySelectorAll('.battle-line');
+      battleLines.forEach(line => {
+        line.classList.add('active');
+        setTimeout(() => line.classList.remove('active'), 1000);
+      });
+      
+      const scoreChange = document.createElement('div');
+      scoreChange.className = 'score-change';
+      scoreChange.textContent = `${opt.impact > 0 ? '+' : ''}${opt.impact}`;
+      scoreChange.style.left = '50%';
+      scoreChange.style.top = '50%';
+      scoreChange.style.transform = 'translate(-50%, -50%)';
+      mapEl.appendChild(scoreChange);
+      setTimeout(() => scoreChange.remove(), 1500);
+      
+      animateNumber(scoreEl, parseInt(scoreEl.textContent), score);
+      animateNumber(hudMoraleEl, parseInt(hudMoraleEl.textContent), morale);
+    }
+    
+    function animateNumber(element, start, end) {
+      const duration = 800;
+      const startTime = performance.now();
+      const difference = end - start;
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + difference * easeOut);
+        element.textContent = current;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          element.textContent = end;
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    function playAudio(audioId) {
+      const audio = document.getElementById(audioId);
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(err => console.log('Audio play failed:', err));
+      }
+    }
+
+    function pickOption(opt) {
+      score += opt.impact;
+      morale = Math.max(0, Math.min(100, morale + opt.impact * 5));
+      
+      animateChoice(opt);
+
+      if (opt.impact > 0) {
+        playAudio('audio-positive');
+      } else if (opt.impact < 0) {
+        playAudio('audio-negative');
+      }
+
+      outcomeEl.textContent = `${opt.explain} [${opt.impact > 0 ? '+' : ''}${opt.impact} Strategic Points]`;
+
+      quoteEl.innerHTML = `<strong>Lincoln:</strong> "${opt.lincoln}"`;
+
+      const choiceButtons = choicesEl.querySelectorAll('button.choice');
+      choiceButtons.forEach(btn => btn.disabled = true);
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'next';
+      nextBtn.textContent = dayIndex < days.length - 1 ? 'Continue to Next Day →' : 'View Battle Summary →';
+      nextBtn.onclick = () => {
+        if (dayIndex < days.length - 1) {
+          dayIndex++;
+          renderDay();
+        } else {
+          endSummary();
+        }
+      };
+      choicesEl.appendChild(nextBtn);
+    }
+
+    function endSummary() {
+      const verdict =
+        score >= 3 ? { text: "Strong strategic preservation of the Union position.", tone: 'good' } :
+        score >= 0 ? { text: "Mixed outcomes; some prudent choices, some costly.", tone: 'neutral' } :
+        { text: "Costly decisions reduced effectiveness and morale.", tone: 'bad' };
+
+      if (verdict.tone === 'good') {
+        playAudio('audio-win');
+      } else if (verdict.tone === 'bad') {
+        playAudio('audio-lose');
+      }
+
+      outcomeEl.innerHTML = `<strong>BATTLE RESULT:</strong> ${verdict.text}`;
+      quoteEl.innerHTML = '<strong>Lincoln:</strong> "...that these dead shall not have died in vain..." — Your command decisions demonstrate how leadership either honors sacrifice through effective strategy or wastes it through misjudgment.';
+      scoreEl.style.color =
+        verdict.tone === 'good' ? 'var(--good)' :
+        verdict.tone === 'neutral' ? 'var(--neutral)' : 'var(--bad)';
+
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'next';
+      resetBtn.textContent = '← Back to Before Battle';
+      resetBtn.onclick = () => {
+        score = 0;
+        morale = 50;
+        dayIndex = 0;
+        scoreEl.textContent = '0';
+        scoreEl.style.color = 'var(--gold)';
+        hudMoraleEl.textContent = '50';
+        
+        const mapEl = document.getElementById('map');
+        const unionFlag = mapEl.querySelector('.flag.union.meade');
+        const confedFlag = mapEl.querySelector('.flag.confed.lee');
+        const unionLine = mapEl.querySelector('#union-line');
+        const confedLine = mapEl.querySelector('#confed-line');
+        
+        if (unionFlag) {
+          unionFlag.style.left = '20%';
+          unionFlag.style.top = '30%';
+        }
+        if (confedFlag) {
+          confedFlag.style.left = '75%';
+          confedFlag.style.top = '46%';
+        }
+        if (unionLine) {
+          unionLine.setAttribute('x1', '200');
+          unionLine.setAttribute('x2', '200');
+        }
+        if (confedLine) {
+          confedLine.setAttribute('x1', '750');
+          confedLine.setAttribute('x2', '750');
+        }
+        
+        renderDay();
+      };
+      choicesEl.appendChild(resetBtn);
+    }
+
+    roleEl.addEventListener('change', () => {
+      const role = roleEl.value;
+      document.title = role === 'meade'
+        ? 'Gettysburg Decisions — Meade (Union)'
+        : 'Gettysburg Decisions — Lee (Confederate)';
+    });
+
+    renderDay();
+  </script>
+</body>
+</html>
+
